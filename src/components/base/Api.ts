@@ -1,6 +1,7 @@
+import { IApi } from "src/types";
 type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 
-export class Api {
+export class Api implements IApi {
     readonly baseUrl: string;
     protected options: RequestInit;
 
