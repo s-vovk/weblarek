@@ -14,7 +14,7 @@ export interface IProduct {
   price: number | null;
 } 
 
-export type TPayment = 'online' | 'cache' | undefined
+export type TPayment = 'online' | 'cash' | undefined
 
 export interface IBuyer {
   payment: TPayment;

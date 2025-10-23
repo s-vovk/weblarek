@@ -1,9 +1,10 @@
 import { IProduct } from 'src/types'
+import { IEvents } from '../base/Events'
 
 export class Cart {
   private items: IProduct[]
 
-  constructor() {
+  constructor(protected events: IEvents) {
     this.items = []
   }
 
@@ -13,17 +14,20 @@ export class Cart {
 
   addItem (item: IProduct){
     this.items.push(item)
+    this.events.emit('basket:change')
   }
 
   removeItem(id: string) {
     const index = this.items.findIndex(item => item.id === id)
     if (index !== -1) {
       this.items.splice(index, 1)
+      this.events.emit('basket:change')
     }
   }
 
   removeAll() {
     this.items = []
+    this.events.emit('basket:change')
   }
 
   getTotalCoast(): number{

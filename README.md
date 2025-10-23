@@ -216,3 +216,199 @@ Presenter - презентер содержит основную логику п
 Методы:
 `getProducts(): IProduct[]` - получает товары.
 `createOrder(args: TCreateOrder): TOrder` - создает заказ.
+
+# View
+
+## Header
+
+- Содержит кнопку открытия модального окна корзины.
+- Отображает количество товаров в корзине.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`basketButton: HTMLButtonElement` - кнопка открытия корзины.
+`counterElement: HTMLElement` - счетчик товаров в корзине.
+
+Методы:
+`set counter(value: number)` - устанавливает количество товаров в корзине.
+
+## Catalog
+
+Отображает список карточек товаров.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`containerElement: HTMLElement` - контейнер для карточек товаров.
+
+Методы:
+`set cards(value: HTMLElement[])` - устанавливает список карточек товаров.
+
+## Modal
+
+Отображает модальное окно.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`closeButton: HTMLButtonElement` - кнопка закрытия модального окна.
+`contentElement: HTMLElement` - контейнер для содержимого модального окна.
+
+Методы:
+`set content(value: HTMLElement)` - устанавливает содержимое модального окна.
+
+## BaseProductCard
+
+Родительский класс для карточек товаров (содержит общие поля).
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`titleElement: HTMLElement` - название товара.
+`priceElement: HTMLElement` - цена товара.
+
+Методы:
+`set title(value: string)` - устанавливает название товара.
+`set price(value: number | null)` - устанавливает цену товара.
+
+## ProductCard
+
+Карточка товара в каталоге товаров.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`categoryElement: HTMLElement` - категория товара.
+`imageElement: HTMLImageElement` - изображение товара.
+
+Методы:
+`set category(value: string)` - устанавливает категорию товара.
+`set image(value: string)` - устанавливает изображение товара.
+
+## ProductDetails
+
+Карточка описания товара.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`categoryElement: HTMLElement` - категория товара.
+`imageElement: HTMLElement` - изображение товара.
+`textElement: HTMLElement` - описание товара.
+`basketButton: HTMLButtonElement` - кнопка добавления / удаления товара из корзины.
+
+Методы:
+`set category(value: string)` - устанавливает категорию товара.
+`set image(value: string)` - устанавливает изображение товара.
+`set text(value: string)` - устанавливает описание товара.
+
+## ProductBasket
+
+Карточка товара в корзине.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`indexElement: HTMLElement` - индекс товара в корзине.
+`deleteButton: HTMLButtonElement` - кнопка удаления товара из корзины.
+
+Методы:
+`set index(value: number)` - устанавливает индекс товара в корзине.
+
+## Basket
+
+Корзина товаров.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`listElement: HTMLElement` - список карточек товаров в корзине.
+`orderButton: HTMLButtonElement` - кнопка оформления заказа.
+`orderAmountElement: HTMLElement` - сумма заказа.
+
+Методы:
+`set items(value: HTMLElement[])` - устанавливает список товаров в корзине.
+`set orderAmount(value: number)` - устанавливает сумму заказа.
+
+## Order
+
+Родительский класс заказа (содержит общие поля и методы).
+
+Поля:
+`formErrorsElement: HTMLElement` - ошибки формы.
+`submitButton: HTMLButtonElement` - кнопка отправки формы.
+
+Методы:
+`set errors:(value: string)` - устанавливаем ошибки формы.
+
+## OrderAddress
+
+Заказ: способ оплаты и адрес доставки.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`cardButton: HTMLButtonElement` - кнопка оплата онлайн.
+`cashButton: HTMLButtonElement` - кнопка оплата при получении.
+`addressInput: HTMLElement` - адрес доставки.
+
+## OrderContacts
+
+Заказ: email и телефон.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`emailInput: HTMLElement` - email.
+`phoneInput: HTMLElement` - телефон.
+
+## OrderSuccess
+
+Заказ успешно оформлен.
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - принимает ссылку на DOM элемент за отображение, которого он отвечает и брокер событий для отправки сообщений.
+
+Поля:
+`descriptionElement: HTMLElement` - описание заказа.
+`closeButton: HTMLButtonElement` - кнопка закрытия.
+
+Методы:
+`set orderAmount(value: number)` - устанавливает сумму заказа (для отображения описания заказа).
+
+# События
+
+`catalog:change` - изменены данные о списке товаров.
+`catalog:product:click` - нажатие на карточку товара в каталоге.
+`product:details:button:click` - нажатие на кнопку в карточке описания товара.
+
+`modal:close` - модальное окно закрылось.
+
+`basket:open` - открыть корзину.
+`basket:change` - данные корзины обновились.
+`basket:product:remove` - удалить товар из корзины.
+`basket:create:order` - оформить заказ.
+
+`order:payment:change` - изменился способ оплаты в заказе.
+`order:address:change` - изменился адрес доставки в заказе.
+`order:phone:change` - изменился телефон в заказе.
+`order:email:change` - изменился email в заказе.
+`order:submit` - создать заказ.
+`order:done` - заказ успешно оформлен, закрыть форму.
+
+# Презентер
+
+- Получает данные о товарах с сервера.
+- Инициализирует классы моделей и предствлений.
+- Обрабатывает события от моделей и представлений.

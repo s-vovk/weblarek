@@ -1,172 +1,227 @@
 import './scss/styles.scss';
-import { Products, Cart, Buyer, ServerData } from 'src/components/models'
-import { apiProducts } from 'src/utils/data'
+import { Products, Cart, Buyer, ServerData } from 'src/components/models';
 import { Api } from './components/base/Api';
 import { API_URL } from './utils/constants';
+import { Header } from './components/view/Header';
+import { Modal } from './components/view/Modal';
+import { EventEmitter } from './components/base/Events';
+import { cloneTemplate, ensureElement } from './utils/utils';
+import { Catalog } from './components/view/Catalog';
+import { ProductCard } from './components/view/ProductCard';
+import { IProduct, TPayment } from './types';
+import { ProductDetails } from './components/view/ProductDetails';
+import { ProductBasket } from './components/view/ProductBasket';
+import { Basket } from './components/view/Basket';
+import { OrderAddress } from './components/view/OrderAddress';
+import { OrderContacts } from './components/view/OrderContacts';
+import { OrderSuccess } from './components/view/OrderSuccess';
 
-const products = new Products()
-const cart = new Cart()
+const events = new EventEmitter()
+
+const products = new Products(events)
+const cart = new Cart(events)
 const buyer = new Buyer()
 
 const api = new Api(API_URL)
 const serverData = new ServerData(api)
 
-// Вспомогательные функции для теста методов
-const assert = (condition: boolean, message: string) => {
-  console.assert(condition, message)
+const fetchProducts = async () => {
+  const serverProducts = await serverData.getProducts()
+  products.setItems(serverProducts.items)
 }
 
-const error = (method: string): string => {
-  return `Ошибка: метод ${method} не работает!`
+events.on('catalog:change', () => {
+  const cards = products.getItems().map(product => {
+    const container = cloneTemplate('#card-catalog')
+    const actions = {
+      onProductClick: () => events.emit('catalog:product:click', product),
+    }
+
+    const card = new ProductCard(container, actions)
+    return card.render(product)
+  })
+
+  const container = ensureElement('.gallery')
+  container.replaceChildren()
+
+  const catalog = new Catalog(container)
+  catalog.render({ cards })
+})
+
+const createHeader = () => {
+  const container = ensureElement('.header__container')
+  return new Header(container, events)
 }
 
-const randomItem = <T>(items: T[]): T => {
-  const index = Math.floor(Math.random() * items.length)
-  return items[index]
+const createModal = () => {
+  const container = ensureElement('#modal-container')
+  return new Modal(container, events)
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  /* Тестируем методы Produts */
-  console.log('Тестируем методы класса Products...')
+  // Получаем данные о товарах с сервера
+  fetchProducts()
 
-  const items = apiProducts.items
-  products.setItems(items)
+  const modal = createModal()
+  const header = createHeader()
+  let isBasketOpen = false
 
-  assert(
-    products.getItems() === items, 
-    error('setItems или getItems')
-  )
+  events.on('modal:close', () => {
+    isBasketOpen = false
+    modal.close()
+  }) 
 
-  const item1 = randomItem(items) // Выбираем произвольный элемент из массива
+  events.on('product:details:button:click', (product: IProduct) => {
+    modal.close()
 
-  assert(
-    products.getItem(item1.id) === item1,
-    error('getItem')
-  )
+    if (cart.hasItem(product.id)) {
+      cart.removeItem(product.id)
+    } else {
+      cart.addItem(product)
+    }
+  })
 
-  products.setSelectedItem(item1.id)
+  const showProductDetails = (product: IProduct) => {
+    const container = cloneTemplate('#card-preview')
+    const actions = { 
+      onClick: () => events.emit('product:details:button:click', product) 
+    }
+
+    const details = new ProductDetails(container, actions)
+    const isProductInCart = cart.hasItem(product.id)
+    const buttonLabel = product.price ? (isProductInCart ? 'Удалить из корзины' : 'Купить') : 'Недоступно' 
+    const isButtonDisabled = !product.price
+    const content = details.render({ ... product, buttonLabel, isButtonDisabled })
+
+    modal.render({ content })
+    modal.open()
+  }
   
-  assert(
-    products.getSelectedItem() === item1,
-    error('setSelectedItem или getSelectedItem')
-  )
+  events.on('catalog:product:click', (product: IProduct) => {
+    showProductDetails(product)
+  })
 
-  /* Тестируем методы Cart */
-  console.log('Тестируем методы класса Cart...')
+  events.on('basket:change', () => {
+    const counter = cart.getItemsCount()
+    header.render({ counter })
 
-  cart.addItem(item1)
-  assert(
-    cart.getItems()[0] === item1,
-    error('addItem или getItems')
-  )
+    if (isBasketOpen) {
+      const content = getBasketContent()
+      modal.render({ content })
+    }
+  })
 
-  const item2 = randomItem(items)
+  events.on('basket:product:remove', (product: IProduct) => {
+    cart.removeItem(product.id)
+  })
 
-  cart.addItem(item2)
-  assert(
-    cart.getItemsCount() === 2,
-    error('getItemsCount')
-  )
+  events.on('basket:create:order', () => {
+    isBasketOpen = false
+    const content = getOrderAddressContent()
+    modal.render({ content })
+  })
 
-  assert(
-    cart.hasItem(item2.id),
-    error('hasItem')
-  )
+  const getBasketContent = () => {
+    const items = cart.getItems().map((product, index) => {
+      const container = cloneTemplate('#card-basket')
+      const actions = { 
+        onRemoveItem: () => events.emit('basket:product:remove', product) 
+      }
+      const card = new ProductBasket(container, actions)
+      return card.render({ ...product, index: index + 1 })
+    })
 
-  assert(
-    cart.getTotalCoast() === ((item1.price ?? 0)+ (item2.price ?? 0)) ,
-    error('getTotalCoast')
-  )
+    const container = cloneTemplate('#basket')
+    const orderAmount = cart.getTotalCoast()
+    const basket = new Basket(container, events)
+    const content = basket.render({ items, orderAmount })
+    
+    return content
+  }
+
+  events.on('basket:open', () => {
+    const content = getBasketContent()
+    modal.render({ content })
+    modal.open()
+    
+    isBasketOpen = true
+  })
+
+  const getOrderContactsContent = () => {
+    const container = cloneTemplate('#contacts')
+    const order = new OrderContacts(container, events)
+    const data = buyer.getData()
+    const isEmailValid = buyer.isEmailValid()
+    const isPhoneValid = buyer.isPhoneValid()
+    const error = isEmailValid && !isPhoneValid ? 'Необходимо указать телефон' : (
+      !isEmailValid && isPhoneValid ? 'Необходимо указать email' : ''
+    )
+    const isSubmitEnabled = isPhoneValid && isEmailValid
+    const content = order.render({ ...data, error, isSubmitEnabled })
+
+    return content
+  }
+
+  const getOrderAddressContent = () => {
+    const container = cloneTemplate('#order')
+    const order = new OrderAddress(container, events)
+    const data = buyer.getData()
+    const isPaymentValid = buyer.isPaymentValid()
+    const isAddressValid = buyer.isAddressValid()
+    const error = isPaymentValid && !isAddressValid ? 'Необходимо указать адрес' : (
+      !isPaymentValid && isAddressValid ? 'Необходимо указать способ оплаты' : ''
+    )
+    const isSubmitEnabled = isPaymentValid && isAddressValid
+    const content = order.render({ ...data, error, isSubmitEnabled })
+
+    return content
+  }
+
+  events.on('order:payment:change', ({ payment }: { payment: TPayment}) => {
+    buyer.setPayment(payment)
+    const content = getOrderAddressContent()
+    modal.render({ content })
+  })
+
+  events.on('order:address:change', ({ address }: { address: string}) => {
+    buyer.setAddress(address)
+    const content = getOrderAddressContent()
+    modal.render({ content })
+  })
+
+  events.on('order:email:change', ({ email }: { email: string}) => {
+    buyer.setEmail(email)
+    const content = getOrderContactsContent()
+    modal.render({ content })
+  })
+
+  events.on('order:phone:change', ({ phone }: { phone: string}) => {
+    buyer.setPhone(phone)
+    const content = getOrderContactsContent()
+    modal.render({ content })
+  })
+
+  const createOrder = () => {
+    const orderAmount = cart.getTotalCoast()
+    cart.removeAll()
+    buyer.removeData()
+
+    const container = cloneTemplate('#success')
+    const order = new OrderSuccess(container, events)
+    const content = order.render({ orderAmount })
+    modal.render({ content })
+  }
   
-  cart.removeItem(item2.id)
+  events.on('order:submit', ({ step }: { step: 'address' | 'contacts'}) => {
+    if (step === 'address') {
+      const content = getOrderContactsContent()
+      modal.render({ content })
+    } else if (step === 'contacts') {
+      createOrder()
+    }
+  })
 
-  assert(
-    cart.getItemsCount() === 1,
-    error('removeItem')
-  )
-
-  cart.removeAll()
-
-  assert(
-    cart.getItemsCount() === 0,
-    error('removeAll')
-  )
-
-  /* Тестируем методы Bayer */
-  console.log('Тестируем методы класса Bayer...')
-
-  const payment = 'online'
-  const email = 'test@yandex.ru'
-  const phone = '112'
-  const address = 'На деревню дедушке'
-
-  assert(
-    buyer.validatePayment(payment).isValid,
-    error('validatePayment')
-  )
-
-  buyer.setPayment(payment)
-
-  assert(
-    buyer.getData().payment === payment,
-    error('setPayment')
-  )
-
-  assert(
-    buyer.validateEmail(email).isValid,
-    error('validateEmail')
-  )
-
-  buyer.setEmail(email)
-
-  assert(
-    buyer.getData().email === email,
-    error('setEmail')
-  )
-
-  assert(
-    buyer.validatePhone(phone).isValid,
-    error('validatePhone')
-  )
-
-  buyer.setPhone(phone)
-
-  assert(
-    buyer.getData().phone === phone,
-    error('setPhone')
-  )
-
-  assert(
-    buyer.validateAdress(address).isValid,
-    error('validateAdress')
-  )
-
-  buyer.setAdress(address)
-
-  assert(
-    buyer.getData().address === address,
-    error('setAdress')
-  )
- 
-  buyer.removeData()
-  const data = buyer.getData()
-
-  assert(
-    !data.payment && !data.phone && !data.email && !data.address,
-    error('removeData')
-  )
-
-  // Запрос к серверу
-  console.log('Тестируем класс ServerData...')
-  const serverProducts = await serverData.getProducts()
-  console.log('ServerData -> get products', serverProducts)
-
-  products.setItems(serverProducts.items)
-  console.log('products -> getItems:', products.getItems())
-
-  assert(
-    products.getItems() === serverProducts.items,
-    error('getProducts')
-  )
-
+  events.on('order:done', () => {
+    modal.close()
+  })
 })

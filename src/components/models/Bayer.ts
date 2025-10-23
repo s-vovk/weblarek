@@ -2,11 +2,11 @@ import { IValidation, IBuyer, TPayment } from "src/types"
 
 export class Buyer { 
   private payment?: TPayment
-  private email!: string 
-  private phone!: string 
-  private address!: string
+  private email: string = ''
+  private phone: string = ''
+  private address: string = ''
 
-  validatePayment(payment: string): IValidation {
+  validatePayment(payment: TPayment | undefined): IValidation {
     if (payment) {
       return {
         isValid: true,
@@ -19,12 +19,16 @@ export class Buyer {
     }
   }
 
+  isPaymentValid() {
+    return this.validatePayment(this.payment).isValid
+  }
+
   setPayment(payment: TPayment) {
     this.payment = payment
   }
 
 
-  validateEmail (email: string): IValidation {
+  validateEmail(email: string): IValidation {
     if (email) {
       return {
         isValid: true,
@@ -37,11 +41,15 @@ export class Buyer {
     }
   }
 
-  setEmail (email: string){
+  isEmailValid() {
+    return this.validateEmail(this.email).isValid
+  }
+
+  setEmail(email: string){
     this.email = email
   }
 
-  validatePhone (phone: string): IValidation{
+  validatePhone(phone: string): IValidation{
     if (phone) {
       return {
         isValid: true,
@@ -54,11 +62,15 @@ export class Buyer {
     }
   }
 
-  setPhone (phone: string) {
+  isPhoneValid() {
+    return this.validatePhone(this.phone).isValid
+  }
+
+  setPhone(phone: string) {
     this.phone = phone
   }
 
-  validateAdress (adress: string): IValidation {
+  validateAdress(adress: string): IValidation {
     if (adress) {
       return {
         isValid: true,
@@ -71,11 +83,15 @@ export class Buyer {
     }
   }
 
-  setAdress (adress: string) {
+  isAddressValid() {
+    return this.validateAdress(this.address).isValid
+  }
+
+  setAddress (adress: string) {
     this.address = adress
   }
 
-  getData (): IBuyer {
+  getData(): IBuyer {
     return {
       payment: this.payment,
       email: this.email,
@@ -84,7 +100,7 @@ export class Buyer {
     }
   }
 
-  removeData () {
+  removeData() {
     this.payment = undefined
     this.email = ''
     this.phone = ''

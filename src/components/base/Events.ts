@@ -1,15 +1,33 @@
 // Хорошая практика даже простые типы выносить в алиасы
 // Зато когда захотите поменять это достаточно сделать в одном месте
-type EventName = string | RegExp;
+type Events = 
+  | 'catalog:change'
+  | 'catalog:product:click'
+  | 'product:details:button:click'
+  | 'basket:open'
+  | 'basket:change'
+  | 'basket:product:remove'
+  | 'basket:create:order'
+  | 'order:address:change' 
+  | 'order:payment:change' 
+  | 'order:email:change'
+  | 'order:phone:change'
+  | 'order:submit' 
+  | 'order:done'
+  | 'modal:close'
+
+type EventName = Events | '*' | RegExp;
 type Subscriber = Function;
 type EmitterEvent = {
     eventName: string,
     data: unknown
 };
 
+
+
 export interface IEvents {
     on<T extends object>(event: EventName, callback: (data: T) => void): void;
-    emit<T extends object>(event: string, data?: T): void;
+    emit<T extends object>(event: Events, data?: T): void;
     trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void;
 }
 
@@ -73,7 +91,7 @@ export class EventEmitter implements IEvents {
      * Сбросить все обработчики
      */
     offAll() {
-        this._events = new Map<string, Set<Subscriber>>();
+        this._events = new Map<EventName, Set<Subscriber>>();
     }
 
     /**

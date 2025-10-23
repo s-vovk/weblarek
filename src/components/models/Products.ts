@@ -1,15 +1,17 @@
 import { IProduct } from 'src/types'
+import { IEvents } from '../base/Events'
 
 export class Products {
   private items: IProduct[]
   private selectedItem?: IProduct
 
-  constructor() {
+  constructor(protected events: IEvents) {
     this.items = []
   }
 
   setItems(items: IProduct[]) {
     this.items = items
+    this.events.emit('catalog:change')
   }
 
   getItems() {
