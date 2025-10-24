@@ -6,8 +6,8 @@ export class Buyer {
   private phone: string = ''
   private address: string = ''
 
-  validatePayment(payment: TPayment | undefined): IValidation {
-    if (payment) {
+  validatePayment(): IValidation {
+    if (this.payment) {
       return {
         isValid: true,
       }
@@ -15,21 +15,16 @@ export class Buyer {
 
     return {
       isValid: false,
-      error: 'Не указан способ оплаты'
+      error: 'Необходимо указать способ оплаты'
     }
-  }
-
-  isPaymentValid() {
-    return this.validatePayment(this.payment).isValid
   }
 
   setPayment(payment: TPayment) {
     this.payment = payment
   }
 
-
-  validateEmail(email: string): IValidation {
-    if (email) {
+  validateEmail(): IValidation {
+    if (this.email) {
       return {
         isValid: true,
       }
@@ -37,20 +32,16 @@ export class Buyer {
 
     return {
       isValid: false,
-      error: 'Не указан email'
+      error: 'Необходимо указать email'
     }
-  }
-
-  isEmailValid() {
-    return this.validateEmail(this.email).isValid
   }
 
   setEmail(email: string){
     this.email = email
   }
 
-  validatePhone(phone: string): IValidation{
-    if (phone) {
+  validatePhone(): IValidation {
+    if (this.phone) {
       return {
         isValid: true,
       }
@@ -58,20 +49,16 @@ export class Buyer {
 
     return {
       isValid: false,
-      error: 'Не указан телефон'
+      error: 'Необходимо указать телефон'
     }
-  }
-
-  isPhoneValid() {
-    return this.validatePhone(this.phone).isValid
   }
 
   setPhone(phone: string) {
     this.phone = phone
   }
 
-  validateAdress(adress: string): IValidation {
-    if (adress) {
+  validateAddress(): IValidation {
+    if (this.address) {
       return {
         isValid: true,
       }
@@ -79,12 +66,8 @@ export class Buyer {
 
     return {
       isValid: false,
-      error: 'Не указан адрес'
+      error: 'Необходимо указать адрес'
     }
-  }
-
-  isAddressValid() {
-    return this.validateAdress(this.address).isValid
   }
 
   setAddress (adress: string) {
@@ -105,5 +88,51 @@ export class Buyer {
     this.email = ''
     this.phone = ''
     this.address = ''
+  }
+
+  validateContactsForm(): IValidation {
+    const { isValid: isEmailValid, error: emailError } = this.validateEmail()
+    const { isValid: isPhoneValid, error: phoneError } = this.validatePhone()
+
+    if (isEmailValid && !isPhoneValid) {
+      return {
+        isValid: false,
+        error: phoneError
+      }
+    }
+
+    if (!isEmailValid && isPhoneValid) {
+      return {
+        isValid: false,
+        error: emailError
+      }
+    }
+
+    return {
+      isValid: isEmailValid && isPhoneValid
+    }
+  }
+
+  validateAddressForm(): IValidation {
+    const { isValid: isPaymentValid, error: paymentError } = this.validatePayment()
+    const { isValid: isAddressValid, error: addressError } = this.validateAddress()
+
+    if (isPaymentValid && !isAddressValid) {
+      return {
+        isValid: false,
+        error: addressError
+      }
+    }
+
+    if (!isPaymentValid && isAddressValid) {
+      return {
+        isValid: false,
+        error: paymentError
+      }
+    }
+
+    return {
+      isValid: isPaymentValid && isAddressValid
+    }
   }
 }

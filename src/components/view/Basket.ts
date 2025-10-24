@@ -23,8 +23,11 @@ export class Basket extends Component<ICart> {
   }
 
   set items(value: HTMLElement[]) {
+    this.listElement.replaceChildren()
+
     if (value?.length) {
       this.listElement.append(...value)
+      this.orderButton.disabled = false
     } else {
       this.listElement.textContent = 'Корзина пуста'
       this.orderButton.disabled = true

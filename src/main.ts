@@ -58,12 +58,37 @@ const createModal = () => {
   return new Modal(container, events)
 }
 
+const createBasket = () => {
+  const container = cloneTemplate('#basket')
+  return new Basket(container, events)
+}
+
+const createOrderContacts = () => {
+  const container = cloneTemplate('#contacts')
+  return new OrderContacts(container, events)
+}
+
+const createOrderAddress = () => {
+  const container = cloneTemplate('#order')
+  return new OrderAddress(container, events)
+}
+
+const createOrderSuccess = () => {
+  const container = cloneTemplate('#success')
+  return new OrderSuccess(container, events)
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Получаем данные о товарах с сервера
   fetchProducts()
 
   const modal = createModal()
   const header = createHeader()
+  const basket = createBasket()
+  const orderContacts = createOrderContacts()
+  const orderAddress = createOrderAddress()
+  const orderSuccess = createOrderSuccess()
+
   let isBasketOpen = false
 
   events.on('modal:close', () => {
@@ -80,8 +105,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       cart.addItem(product)
     }
   })
-
-  const showProductDetails = (product: IProduct) => {
+  
+  events.on('catalog:product:click', (product: IProduct) => {
     const container = cloneTemplate('#card-preview')
     const actions = { 
       onClick: () => events.emit('product:details:button:click', product) 
@@ -95,10 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     modal.render({ content })
     modal.open()
-  }
-  
-  events.on('catalog:product:click', (product: IProduct) => {
-    showProductDetails(product)
   })
 
   events.on('basket:change', () => {
@@ -131,12 +152,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return card.render({ ...product, index: index + 1 })
     })
 
-    const container = cloneTemplate('#basket')
     const orderAmount = cart.getTotalCoast()
-    const basket = new Basket(container, events)
-    const content = basket.render({ items, orderAmount })
-    
-    return content
+    return basket.render({ items, orderAmount })
   }
 
   events.on('basket:open', () => {
@@ -148,33 +165,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   })
 
   const getOrderContactsContent = () => {
-    const container = cloneTemplate('#contacts')
-    const order = new OrderContacts(container, events)
     const data = buyer.getData()
-    const isEmailValid = buyer.isEmailValid()
-    const isPhoneValid = buyer.isPhoneValid()
-    const error = isEmailValid && !isPhoneValid ? 'Необходимо указать телефон' : (
-      !isEmailValid && isPhoneValid ? 'Необходимо указать email' : ''
-    )
-    const isSubmitEnabled = isPhoneValid && isEmailValid
-    const content = order.render({ ...data, error, isSubmitEnabled })
-
-    return content
+    const { error = '', isValid } = buyer.validateContactsForm()
+    return orderContacts.render({ ...data, error, isSubmitEnabled: isValid })
   }
 
   const getOrderAddressContent = () => {
-    const container = cloneTemplate('#order')
-    const order = new OrderAddress(container, events)
     const data = buyer.getData()
-    const isPaymentValid = buyer.isPaymentValid()
-    const isAddressValid = buyer.isAddressValid()
-    const error = isPaymentValid && !isAddressValid ? 'Необходимо указать адрес' : (
-      !isPaymentValid && isAddressValid ? 'Необходимо указать способ оплаты' : ''
-    )
-    const isSubmitEnabled = isPaymentValid && isAddressValid
-    const content = order.render({ ...data, error, isSubmitEnabled })
-
-    return content
+    const { error = '', isValid } = buyer.validateAddressForm()
+    return orderAddress.render({ ...data, error, isSubmitEnabled: isValid })
   }
 
   events.on('order:payment:change', ({ payment }: { payment: TPayment}) => {
@@ -206,9 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     cart.removeAll()
     buyer.removeData()
 
-    const container = cloneTemplate('#success')
-    const order = new OrderSuccess(container, events)
-    const content = order.render({ orderAmount })
+    const content = orderSuccess.render({ orderAmount })
     modal.render({ content })
   }
   

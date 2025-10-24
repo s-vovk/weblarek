@@ -1,6 +1,6 @@
 import { ensureElement } from "src/utils/utils";
 import { BaseProductCard } from "./BaseProductCard";
-import { setCategoryElement, setImageElement } from "./ProductUtils";
+import { setCategoryElement, setImageElement } from "../../utils/ProductUtils";
 
 interface IProductCard {
   category: string

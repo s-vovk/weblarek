@@ -42,10 +42,12 @@ export class OrderAddress extends Order<IOrderAddress> {
   set payment(value: TPayment) {
     if (value === 'online') {
       this.cardButton.classList.toggle('button_alt-active', true)
+      this.cashButton.classList.toggle('button_alt-active', false)
     }
 
     if (value === 'cash') {
       this.cashButton.classList.toggle('button_alt-active', true)
+      this.cardButton.classList.toggle('button_alt-active', false)
     }
   }
 
